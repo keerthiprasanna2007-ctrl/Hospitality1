@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Floor-wise Emergency Monitoring System</title>
+  <style>
+    :root {
+      --bg-body: #f4f7f6;
+      --text-main: #333;
+      --text-muted: #666;
+      --bg-card: #fff;
+
+      --color-safe: #2ecc71;
+      /* Green */
+      --color-moderate: #3498db;
+      /* Blue */
+      --color-critical: #e74c3c;
+      /* Red */
+      --color-critical-glow: rgba(231, 76, 60, 0.5);
+
+      --border-radius: 12px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: #f8f9fa;
+    }
+
+    .legend-color {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+    }
+
+    .legend-color.safe {
+      background-color: var(--color-safe);
+    }
+
+    .legend-color.moderate {
+      background-color: var(--color-moderate);
+    }
+
+    .legend-color.critical {
+      background-color: var(--color-critical);
+    }
+
+    /* Floor Container */
+    .floor-section {
+      margin-bottom: 40px;
+      background: #eef2f5;
+      padding: 20px;
+      border-radius: var(--border-radius);
+    }
+
+    .floor-header {
+      background-color: #34495e;
+      color: white;
+      padding: 15px 25px;
+      border-radius: var(--border-radius);
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      box-shadow: var(--box-shadow);
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    /* Patient Card */
+    .patient-card {
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      box-shadow: var(--box-shadow);
+      border-top: 6px solid #ccc;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+
+    .patient-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Statuses */
+    .patient-card.safe {
+      border-top-color: var(--color-safe);
+    }
+
+    .patient-card.moderate {
+      border-top-color: var(--color-moderate);
+    }
+
+    .patient-card.critical {
+      border-top-color: var(--color-critical);
+      animation: criticalBlink 1.2s infinite alternate;
+    }
+
+    @keyframes criticalBlink {
+      from {
+        box-shadow: 0 0 5px var(--color-critical-glow);
+      }
+
+      to {
+        box-shadow: 0 0 15px var(--color-critical-glow);
+        border-top-color: #c0392b;
+      }
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .patient-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .patient-age {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      background: #f1f2f6;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+
+    .disease-info {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #555;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .disease-stage {
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .case-history {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 8px;
+      padding: 8px;
+      background: #f1f2f6;
+      border-radius: 6px;
+      border-left: 3px solid #3498db;
+    }
+
+    .days-admitted {
+      font-size: 0.85rem;
+      color: #7f8fa6;
+      font-weight: normal;
+    }
+
+    .vitals {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 5px;
+    }
+
+    .vital-box {
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .vital-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .vital-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+
+    .vital-value.red {
+      color: var(--color-critical);
+    }
+
+    .vital-value.blue {
+      color: var(--color-moderate);
+    }
+
+    .vital-value.green {
+      color: var(--color-safe);
+    }
+
+    .status-badge {
+      text-align: center;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: auto;
+    }
+
+    .safe .status-badge {
+      background-color: rgba(46, 204, 113, 0.1);
+      color: var(--color-safe);
+    }
+
+    .moderate .status-badge {
+      background-color: rgba(52, 152, 219, 0.1);
+      color: var(--color-moderate);
+    }
+
+    .critical .status-badge {
+      background-color: rgba(231, 76, 60, 0.1);
+      color: var(--color-critical);
+    }
+
+    .btn-emergency {
+      width: 100%;
+      background-color: var(--color-critical);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      margin-top: 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-emergency:hover {
+      background-color: #c0392b;
+    }
+
+    .btn-emergency:active {
+      transform: scale(0.98);
+    }
+
+    .patient-card.manual-emergency {
+      border-top-color: #8b0000;
+      box-shadow: 0 0 20px rgba(139, 0, 0, 0.6);
+      animation: none;
+    }
+
+    .patient-card.manual-emergency .status-badge {
+      background-color: #8b0000;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Floor-wise Emergency Monitoring System</h1>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color critical"></div> Critical (HR &gt; 110 or O2 &lt; 90)
+      </div>
+      <div class="legend-item">
+        <div class="legend-color moderate"></div> Moderate (HR &gt; 100 or O2 &le; 94)
+      </div>
+      <div class="legend-item">
+        <div class="legend-color safe"></div> Safe Zone (Normal)
+      </div>
+    </div>
+  </header>
+
+  <main id="dashboard"></main>
+
+  <script>
+    // 1. Initial Data (Wait to fetch from backend)
+    let patients = [];
+
+    async function fetchPatients() {
+      try {
+        const response = await fetch('http://localhost:3000/patients');
+        patients = await response.json();
+        renderDashboard();
+      } catch (err) {
+        console.error('Error fetching patients:', err);
+      }
+    }
+
+    // Global manual emergency trigger handler
+    window.triggerEmergency = function (patientId) {
+      const pat = patients.find(p => p.id === patientId);
+      if (pat) {
+        pat.emergency = true;
+        renderDashboard();
+        alert(`🚨 EMERGENCY TRIGGERED for ${pat.name} on Floor ${pat.floor}! Medical team dispatched.`);
+      }
+    };
+
+    // 2. Logic Functions
+    function getStatusCategory(hr, o2) {
+      if (hr > 110 || o2 < 90) return "critical";
+      if (hr > 100 || o2 <= 94) return "moderate";
+      return "safe";
+    }
+
+    function getVitalColorClass(type, val) {
+      if (type === 'hr') {
+        if (val > 110) return 'red';
+        if (val > 100) return 'blue';
+        return 'green';
+      } else {
+        if (val < 90) return 'red';
+        if (val <= 94) return 'blue';
+        return 'green';
+      }
+    }
+
+    // 3. Update Vitals Loop (Fetch from backend every 3 seconds)
+    setInterval(() => {
+      fetchPatients();
+    }, 3000);
+
+    // 4. Render Engine
+    function renderDashboard() {
+      const dashboard = document.getElementById('dashboard');
+      if (!dashboard) return;
+      dashboard.innerHTML = '';
+
+      if (patients.length === 0) {
+        dashboard.innerHTML = '<div style="text-align:center; padding: 50px; font-size: 1.2rem; color: #666;">Loading patient data from server...</div>';
+        return;
+      }
+
+      // Group by Floor
+      const floorsMap = {};
+      patients.forEach(p => {
+        if (!floorsMap[p.floor]) {
+          floorsMap[p.floor] = [];
+        }
+        floorsMap[p.floor].push(p);
+      });
+
+      // Sort Floors
+      const sortedFloorNums = Object.keys(floorsMap).sort((a, b) => Number(a) - Number(b));
+
+      sortedFloorNums.forEach(floorNum => {
+        const floorSec = document.createElement('div');
+        floorSec.className = 'floor-section';
+
+        const floorHeader = document.createElement('div');
+        floorHeader.className = 'floor-header';
+        floorHeader.textContent = `Floor ${floorNum}`;
+        floorSec.appendChild(floorHeader);
+
+        const cardsGrid = document.createElement('div');
+        cardsGrid.className = 'cards-grid';
+
+        // Sort patients within the floor
+        // 1. Manual emergency = highest priority
+        // 2. Lowest oxygen = higher priority
+        // 3. If equal, higher heart rate = higher priority
+        const patList = floorsMap[floorNum];
+        patList.sort((a, b) => {
+          if (a.emergency !== b.emergency) {
+            return a.emergency ? -1 : 1;
+          }
+          if (a.o2 !== b.o2) {
+            return a.o2 - b.o2; // Ascending oxygen
+          }
+          return b.hr - a.hr; // Descending heart rate (higher is worse)
+        });
+
+        patList.forEach(pat => {
+          const status = pat.emergency ? "manual-emergency" : getStatusCategory(pat.hr, pat.o2);
+          const labelText = pat.emergency ? "MANUAL ALERT" : status;
+
+          const card = document.createElement('div');
+          card.className = `patient-card ${status}`;
+
+          card.innerHTML = `
+                        <div class="card-header">
+                            <span class="patient-name">${pat.name}</span>
+                            <span class="patient-age">${pat.age} yrs</span>
+                        </div>
+                        <div class="disease-info">
+                            <div style="flex: 1;">
+                                <div><strong>${pat.disease}</strong></div>
+                                <div class="disease-stage">${pat.stage}</div>
+                                <div class="case-history">📝 ${pat.caseHistory}</div>
+                            </div>
+                            <span class="days-admitted" style="margin-left: 10px;">Admitted: ${pat.daysAdmitted} days</span>
+                        </div>
+                        <div class="vitals">
+                            <div class="vital-box">
+                                <div class="vital-label">Heart Rate</div>
+                                <div class="vital-value ${getVitalColorClass('hr', pat.hr)}">${pat.hr} <span style="font-size:0.9rem">bpm</span></div>
+                            </div>
+                            <div class="vital-box" style="border-left: 2px solid #eaeaea;">
+                                <div class="vital-label">Oxygen Lvl</div>
+                                <div class="vital-value ${getVitalColorClass('o2', pat.o2)}">${pat.o2} <span style="font-size:0.9rem">%</span></div>
+                            </div>
+                        </div>
+                        <div class="status-badge">${labelText.toUpperCase()}</div>
+                        ${!pat.emergency ? `<button class="btn-emergency" onclick="window.triggerEmergency(${pat.id})">🚨 Emergency Button</button>` : `<button class="btn-emergency" style="background-color: #555; cursor: not-allowed;" disabled>MEDICAL TEAM RESPONDING</button>`}
+                    `;
+
+          cardsGrid.appendChild(card);
+        });
+
+        floorSec.appendChild(cardsGrid);
+        dashboard.appendChild(floorSec);
+      });
+    }
+
+    // Initial Render
+    renderDashboard();
+  </script>
+</body>
+
+</html>
